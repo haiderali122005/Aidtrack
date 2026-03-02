@@ -12,6 +12,14 @@
   <b>A transparent, scalable relief distribution and inventory management system.</b>
 </p>
 
+## 🌍 Live Demo
+**Experience the live application here:** [https://aidtrack.vercel.app](https://aidtrack.vercel.app)
+*(Backend API hosted on [https://aidtrack.onrender.com](https://aidtrack.onrender.com))*
+
+> **Note:** The live demo uses a shared database for demonstration purposes. Please do not enter sensitive or real personal information.
+
+---
+
 ## About the Project
 AidTrack is a full-stack MERN application built to solve the logistical challenges of disaster relief. It allows organizations to securely manage dynamic stock inventory, register affected families (beneficiaries), and keep an immutable, trackable history of every item distributed. 
 
@@ -72,11 +80,11 @@ By default, the frontend runs on `http://localhost:3000` and the backend on `htt
 
 **Want to use this for your own organization?**
 This project is built to be a template. If you clone or download this repository, you must connect it to **your own database**:
-1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+1. Create a cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
 2. Get your own connection string.
 3. In the `aidtrack-backend` folder, copy the `aidtrack-backend/.env.example` file and rename it to `.env`.
 4. Paste your connection string into the `MONGO_URI` field and make up a long, random string for the `JWT_SECRET`.
-5. **Update API URLs**: Before deploying your own version to production (e.g., Vercel/Render):
+5. **Update API URLs**: Before deploying your own version to production (e.g., Vercel/Render ( which I did on ...)):
    * In `aidtrack_frontend/src/api.js`, change the `baseURL` to point to your new live backend URL.
    * If you restrict CORS in `aidtrack-backend/server.js`, ensure you add your new frontend URL to the allowed origins array.
 
