@@ -84,7 +84,8 @@ This project is built to be a template. If you clone or download this repository
 2. Get your own connection string.
 3. In the `aidtrack-backend` folder, copy the `aidtrack-backend/.env.example` file and rename it to `.env`.
 4. Paste your connection string into the `MONGO_URI` field and make up a long, random string for the `JWT_SECRET`.
-5. **Update API URLs**: Before deploying your own version to production (e.g., Vercel/Render ( which I did on ...)):
+5. **Admin Access Security**: This app restricts Admin account creation to prevent unauthorized personnel from gaining admin rights. You must create a secret passcode and assign it to `ADMIN_INVITE_CODE` in your `.env` file. You will share this secret code only with authorized team admins so they can select "Administrator" during signup.
+6. **Update API URLs**: Before deploying your own version to production (e.g., Vercel/Render ( which I did on ...)):
    * In `aidtrack_frontend/src/api.js`, change the `baseURL` to point to your new live backend URL.
    * If you restrict CORS in `aidtrack-backend/server.js`, ensure you add your new frontend URL to the allowed origins array.
 

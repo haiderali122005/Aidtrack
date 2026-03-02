@@ -11,6 +11,8 @@ function SignupForm() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('volunteer'); // Default to volunteer
+  const [adminCode, setAdminCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -34,6 +36,8 @@ function SignupForm() {
         username,
         email,
         password,
+        role,
+        adminCode: role === 'admin' ? adminCode : undefined,
       });
 
       setSuccess('Account created successfully!');
@@ -126,6 +130,38 @@ function SignupForm() {
                 placeholder="Create a strong password"
               />
             </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1">I am registering as</label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  if (e.target.value === 'volunteer') setAdminCode('');
+                }}
+                className="w-full px-4 py-3 rounded-xl glass-input text-gray-900 outline-none"
+                required
+              >
+                <option value="volunteer">Volunteer</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+
+            {role === 'admin' && (
+              <div className="animate-slide-up">
+                <label htmlFor="adminCode" className="block text-sm font-semibold text-gray-700 mb-1">Admin Invite Code</label>
+                <input
+                  id="adminCode"
+                  type="password"
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  required={role === 'admin'}
+                  className="w-full px-4 py-3 rounded-xl glass-input placeholder-gray-400 text-gray-900 outline-none border border-red-200 focus:border-red-400"
+                  placeholder="Enter the secret organization code"
+                />
+              </div>
+            )}
 
             <Button type="submit" variant="primary" className="w-full py-3 text-base shadow-xl shadow-primary/20 bg-gradient-to-r from-secondary to-secondary-dark hover:from-secondary-dark hover:to-secondary" isLoading={isLoading}>
               Create Account

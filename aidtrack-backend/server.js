@@ -106,23 +106,37 @@ app.get('/', (req, res) => res.send('AidTrack Backend is running!'));
 // --- User Auth Routes ---
 app.post('/api/signup', async (req, res) => {
   try {
-    // 1. Get user input (IGNORE 'role' from frontend)
-    const { fullName, email, username, password } = req.body;
+    const { fullName, email, username, password, role, adminCode } = req.body;
 
-    // 2. Check if user already exists
+    // 1. Basic Validation
+    if (!role || !['admin', 'volunteer'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role selection.' });
+    }
+
+    // 2. Admin Security Check (The Invite Code)
+    if (role === 'admin') {
+      const validAdminCode = process.env.ADMIN_INVITE_CODE || 'default_admin_code_2026';
+      if (adminCode !== validAdminCode) {
+        return res.status(403).json({ message: 'Invalid Admin Invite Code.' });
+      }
+
+      // 3. Rule: Only one admin per team (Strict limit implemented)
+      const adminCount = await User.countDocuments({ role: 'admin' });
+      if (adminCount >= 1) {
+        return res.status(403).json({ message: 'An Admin already exists for this organization. Please sign up as a volunteer or contact your team.' });
+      }
+    }
+
+    // 4. Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(400).json({ message: 'Email or username already exists.' });
     }
 
-    // 3. Determine Role: If 0 users exist -> 'admin', else -> 'volunteer'
-    const isFirstUser = (await User.countDocuments({})) === 0;
-    const role = isFirstUser ? 'admin' : 'volunteer';
-
-    // 4. Hash Password
+    // 5. Hash Password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
-    // 5. Create User
+    // 6. Create User
     const newUser = new User({
       fullName,
       email,
