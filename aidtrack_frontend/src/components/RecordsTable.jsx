@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api';
 import Card from './ui/Card';
 import Button from './ui/Button';
@@ -41,6 +41,7 @@ function RecordsTable() {
       fetchRecords();
     }, 300);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, searchTerm]);
 
   const handleEditClick = (record) => {
