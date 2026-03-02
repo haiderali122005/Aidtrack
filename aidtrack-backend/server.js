@@ -14,13 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 const BCRYPT_SALT_ROUNDS = 10;
 
 // --- MIDDLEWARE ---
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://aidtrack-sage.vercel.app/'
-  ],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 // --- DATABASE CONNECTION ---
