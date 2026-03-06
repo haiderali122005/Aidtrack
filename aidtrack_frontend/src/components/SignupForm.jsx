@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import { validatePasswordStrength } from '../utils/validation';
 
 function SignupForm() {
   const [fullName, setFullName] = useState('');
@@ -28,6 +29,13 @@ function SignupForm() {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.message);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -152,7 +160,7 @@ function SignupForm() {
 
               {role === 'admin' && (
                 <div className="animate-slide-up" style={{ animationDelay: '300ms' }}>
-                  <label htmlFor="adminCode" className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1 text-secondary-dark">Admin Invite Code</label>
+                  <label htmlFor="adminCode" className="block text-sm font-semibold mb-1.5 ml-1 text-secondary-dark">Admin Invite Code</label>
                   <input
                     id="adminCode"
                     type="password"

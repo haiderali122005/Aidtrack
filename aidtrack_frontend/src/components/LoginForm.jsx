@@ -4,12 +4,14 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from './ui/Button';
 import Card from './ui/Card';
+import { validatePasswordStrength } from '../utils/validation';
 
 function LoginForm() {
   const [loginMethod, setLoginMethod] = useState('email');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [localError, setLocalError] = useState('');
   const { user, login, error } = useAuth();
 
   // If user is already logged in, redirect them immediately
@@ -19,6 +21,14 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLocalError('');
+
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
+      setLocalError(passwordValidation.message);
+      return;
+    }
+
     setIsLoading(true);
     await login(identifier, password);
     setIsLoading(false);
@@ -63,9 +73,9 @@ function LoginForm() {
           </div>
 
           <Card className="border-0 shadow-2xl bg-white/70 backdrop-blur-xl ring-1 ring-white/50">
-            {error && (
+            {(error || localError) && (
               <div className="mb-6 p-4 rounded-xl bg-red-50/80 backdrop-blur-sm border border-red-100 text-red-600 text-sm font-medium animate-slide-up">
-                {error}
+                {error || localError}
               </div>
             )}
 

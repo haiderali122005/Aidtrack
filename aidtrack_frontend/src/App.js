@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginForm from './components/LoginForm';
 import SignupForm from './components/SignupForm';
 import ProfilePage from './pages/ProfilePage';
+import HomePage from './pages/HomePage';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Layout Pages
 import AdminPage from './pages/AdminPage';
@@ -28,7 +30,8 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<LoginForm />} />
             <Route path="/signup" element={<SignupForm />} />
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/" element={<HomePage />} />
 
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>

@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 // --- APP CONFIGURATION ---
 require('dotenv').config(); // Load environment variables
@@ -16,6 +18,33 @@ const BCRYPT_SALT_ROUNDS = 10;
 // --- MIDDLEWARE ---
 app.use(cors());
 app.use(express.json());
+
+// --- EMAIL CONFIGURATION ---
+let transporter;
+if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.ethereal.email',
+    port: process.env.SMTP_PORT || 587,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+} else {
+  nodemailer.createTestAccount((err, account) => {
+    if (err) {
+      console.error('Failed to create a testing account. ' + err.message);
+    } else {
+      console.log('✅ Created Ethereal Test Email Account for local dev');
+      transporter = nodemailer.createTransport({
+        host: account.smtp.host,
+        port: account.smtp.port,
+        secure: account.smtp.secure,
+        auth: { user: account.user, pass: account.pass }
+      });
+    }
+  });
+}
 
 // --- DATABASE CONNECTION ---
 mongoose.connect(MONGO_URI)
@@ -37,6 +66,8 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['volunteer', 'admin'], default: 'volunteer' },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String }
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
@@ -103,6 +134,15 @@ const isAdmin = (req, res, next) => {
 
 app.get('/', (req, res) => res.send('AidTrack Backend is running!'));
 
+const validatePasswordStrength = (password) => {
+  if (password.length < 8) return false;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+{}[\]:;<>,.?~\-]/.test(password);
+  return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+};
+
 // --- User Auth Routes ---
 app.post('/api/signup', async (req, res) => {
   try {
@@ -133,8 +173,14 @@ app.post('/api/signup', async (req, res) => {
       return res.status(400).json({ message: 'Email or username already exists.' });
     }
 
+    // NEW: Password Strength Check
+    if (!validatePasswordStrength(password)) {
+      return res.status(400).json({ message: 'Password does not meet strength requirements. It must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.' });
+    }
+
     // 5. Hash Password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     // 6. Create User
     const newUser = new User({
@@ -142,15 +188,37 @@ app.post('/api/signup', async (req, res) => {
       email,
       username,
       password: hashedPassword,
-      role
+      role,
+      isVerified: false,
+      verificationToken
     });
 
     await newUser.save();
 
-    // Generate Token
-    const token = jwt.sign({ id: newUser._id, role: newUser.role, username: newUser.username }, JWT_SECRET, { expiresIn: '24h' });
+    // 7. Send Verification Email
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verificationLink = `${frontendUrl}/verify-email/${verificationToken}`;
+    const mailOptions = {
+      from: '"AidTrack" <noreply@aidtrack.com>',
+      to: email,
+      subject: 'Verify your AidTrack account',
+      text: `Welcome to AidTrack! Please verify your email by clicking the following link: ${verificationLink}`,
+      html: `<p>Welcome to AidTrack!</p><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`
+    };
 
-    res.status(201).json({ message: `User created successfully! Role assigned: ${role}`, token, user: { id: newUser._id, fullName: newUser.fullName, username: newUser.username, role: newUser.role } });
+    if (transporter) {
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error("Error sending verification email:", error);
+        } else {
+          console.log('Verification email sent: %s', info.messageId);
+          console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+        }
+      });
+    }
+
+    // Don't issue token upon signup anymore; force login after verification
+    res.status(201).json({ message: `Account created! Check your email to verify before logging in.`, user: { id: newUser._id, fullName: newUser.fullName, username: newUser.username, role: newUser.role } });
   } catch (error) {
     console.error("Signup Error:", error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -169,6 +237,10 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
+    if (user.isVerified === false) {
+      return res.status(403).json({ message: 'Please verify your email address before logging in.' });
+    }
+
     // Generate Token
     const token = jwt.sign({ id: user._id, role: user.role, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
 
@@ -179,6 +251,26 @@ app.post('/api/login', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+// --- NEW: Email Verification Route ---
+app.get('/api/verify-email/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const user = await User.findOne({ verificationToken: token });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired verification token.' });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Email verified successfully! You can now log in.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during email verification', error });
   }
 });
 
