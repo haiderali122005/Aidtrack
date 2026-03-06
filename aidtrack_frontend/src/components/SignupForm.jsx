@@ -17,6 +17,13 @@ function SignupForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // OTP Verification States
+  const [otp, setOtp] = useState('');
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -25,10 +32,47 @@ function SignupForm() {
     return <Navigate to={user.role === 'admin' ? '/admin' : '/volunteer'} replace />;
   }
 
+  const handleSendOtp = async () => {
+    if (!email) {
+      setError('Please enter an email address first.');
+      return;
+    }
+    setError('');
+    setOtpLoading(true);
+    setSuccess('');
+    try {
+      const res = await axios.post('https://aidtrack.onrender.com/api/send-otp', { email });
+      setSuccess(res.data.message);
+      setIsOtpSent(true);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send code.');
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otp) return;
+    setError('');
+    setSuccess('');
+    try {
+      const res = await axios.post('https://aidtrack.onrender.com/api/verify-otp', { email, otp });
+      setSuccess(res.data.message);
+      setIsEmailVerified(true);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid code.');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+
+    if (!isEmailVerified) {
+      setError('Please verify your email address before creating an account.');
+      return;
+    }
 
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
@@ -117,16 +161,59 @@ function SignupForm() {
 
               <div className="animate-fade-in" style={{ animationDelay: '150ms' }}>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Email Address</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-5 py-3.5 rounded-xl glass-input placeholder-gray-400 text-gray-900 outline-none text-base"
-                  placeholder="name@company.com"
-                />
+                <div className="flex gap-2 items-center">
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setIsEmailVerified(false);
+                      setIsOtpSent(false);
+                    }}
+                    disabled={isEmailVerified}
+                    required
+                    className="w-full px-5 py-3.5 rounded-xl glass-input placeholder-gray-400 text-gray-900 outline-none text-base disabled:opacity-70 disabled:cursor-not-allowed disabled:bg-gray-50"
+                    placeholder="name@company.com"
+                  />
+                  {!isEmailVerified && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="px-5 py-3.5 rounded-xl whitespace-nowrap bg-white hover:bg-gray-50 text-gray-700 font-semibold"
+                      isLoading={otpLoading}
+                      onClick={handleSendOtp}
+                    >
+                      {isOtpSent ? 'Resend' : 'Verify'}
+                    </Button>
+                  )}
+                  {isEmailVerified && (
+                    <div className="flex items-center justify-center p-3.5 bg-green-50 border border-green-200 rounded-xl text-green-600 shadow-sm">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {isOtpSent && !isEmailVerified && (
+                <div className="animate-slide-up bg-white/60 p-5 rounded-xl border border-secondary/30 shadow-inner">
+                  <label htmlFor="otp" className="block text-sm font-semibold text-secondary-dark mb-2 ml-1">We sent a 6-digit code to your email</label>
+                  <div className="flex gap-2">
+                    <input
+                      id="otp"
+                      type="text"
+                      maxLength="6"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-secondary/30 outline-none text-center tracking-[0.4em] font-bold text-gray-800 focus:ring-2 focus:ring-secondary/50 text-lg"
+                      placeholder="123456"
+                    />
+                    <Button type="button" variant="primary" onClick={handleVerifyOtp} className="px-6 rounded-xl shadow-md shadow-secondary/20 font-semibold">
+                      Confirm
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
                 <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-1.5 ml-1">Password</label>

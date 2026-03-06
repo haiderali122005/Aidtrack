@@ -3,7 +3,7 @@ export const validatePasswordStrength = (password) => {
     // Contains at least one uppercase letter
     // Contains at least one lowercase letter
     // Contains at least one number
-    // Contains at least one special character (!@#$%^&*()_+{}[]:;<>,.?~\\-)
+    // Contains at least one special character (!@#$%^&*()_+{}[]:;<>,.?~\-)
 
     if (password.length < 8) {
         return { isValid: false, message: 'Password must be at least 8 characters long.' };

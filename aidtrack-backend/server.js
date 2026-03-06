@@ -106,7 +106,14 @@ const beneficiarySchema = new mongoose.Schema({
 
 const Beneficiary = mongoose.model('Beneficiary', beneficiarySchema);
 
-
+// 5. OTP Schema (NEW for Email Verification)
+const otpSchema = new mongoose.Schema({
+  email: { type: String, required: true },
+  otp: { type: String, required: true },
+  isVerified: { type: Boolean, default: false },
+  createdAt: { type: Date, expires: '15m', default: Date.now }
+});
+const OTP = mongoose.model('OTP', otpSchema);
 
 // --- API ROUTES (ENDPOINTS) ---
 
@@ -143,6 +150,61 @@ const validatePasswordStrength = (password) => {
   return hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
 };
 
+// --- OTP Email Verification Routes ---
+app.post('/api/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required.' });
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: 'Email already registered.' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await OTP.findOneAndDelete({ email }); // Clear previous
+    await OTP.create({ email, otp });
+
+    const mailOptions = {
+      from: '"AidTrack Verification" <noreply@aidtrack.com>',
+      to: email,
+      subject: 'AidTrack Verification Code',
+      html: `
+        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2 style="color: #333;">Verify your email address</h2>
+          <p style="color: #555; line-height: 1.5;">Please use the following 6-digit verification code to complete your signup process for AidTrack.</p>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1a56db;">${otp}</span>
+          </div>
+          <p style="color: #777; font-size: 14px;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
+        </div>
+      `
+    };
+
+    if (transporter) {
+      await transporter.sendMail(mailOptions);
+      res.status(200).json({ message: 'Verification code sent to your email!' });
+    } else {
+      res.status(500).json({ message: 'Server email system is not configured yet.' });
+    }
+  } catch (error) {
+    console.error("OTP Send Error:", error);
+    res.status(500).json({ message: 'Failed to send email. Please check server logs.', error: error.message });
+  }
+});
+
+app.post('/api/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const record = await OTP.findOne({ email, otp });
+    if (!record) return res.status(400).json({ message: 'Invalid or expired verification code.' });
+
+    record.isVerified = true;
+    await record.save();
+    res.status(200).json({ message: 'Email successfully verified!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // --- User Auth Routes ---
 app.post('/api/signup', async (req, res) => {
   try {
@@ -173,6 +235,12 @@ app.post('/api/signup', async (req, res) => {
       return res.status(400).json({ message: 'Email or username already exists.' });
     }
 
+    // 4.5 Check if email was verified via OTP
+    const otpRecord = await OTP.findOne({ email, isVerified: true });
+    if (!otpRecord) {
+      return res.status(400).json({ message: 'You must verify your email address before creating an account.' });
+    }
+
     // NEW: Password Strength Check
     if (!validatePasswordStrength(password)) {
       return res.status(400).json({ message: 'Password does not meet strength requirements. It must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.' });
@@ -180,7 +248,6 @@ app.post('/api/signup', async (req, res) => {
 
     // 5. Hash Password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-    const verificationToken = crypto.randomBytes(32).toString('hex');
 
     // 6. Create User
     const newUser = new User({
@@ -189,36 +256,16 @@ app.post('/api/signup', async (req, res) => {
       username,
       password: hashedPassword,
       role,
-      isVerified: false,
-      verificationToken
+      isVerified: true // Automatically verified since they passed OTP
     });
 
     await newUser.save();
 
-    // 7. Send Verification Email
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const verificationLink = `${frontendUrl}/verify-email/${verificationToken}`;
-    const mailOptions = {
-      from: '"AidTrack" <noreply@aidtrack.com>',
-      to: email,
-      subject: 'Verify your AidTrack account',
-      text: `Welcome to AidTrack! Please verify your email by clicking the following link: ${verificationLink}`,
-      html: `<p>Welcome to AidTrack!</p><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`
-    };
+    // Clean up OTP to prevent reuse
+    await OTP.findOneAndDelete({ email });
 
-    if (transporter) {
-      transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-          console.error("Error sending verification email:", error);
-        } else {
-          console.log('Verification email sent: %s', info.messageId);
-          console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
-        }
-      });
-    }
-
-    // Don't issue token upon signup anymore; force login after verification
-    res.status(201).json({ message: `Account created! Check your email to verify before logging in.`, user: { id: newUser._id, fullName: newUser.fullName, username: newUser.username, role: newUser.role } });
+    // Since they already verified email, we can let them log in immediately.
+    res.status(201).json({ message: `Account created successfully! You can now log in.`, user: { id: newUser._id, fullName: newUser.fullName, username: newUser.username, role: newUser.role } });
   } catch (error) {
     console.error("Signup Error:", error);
     res.status(500).json({ message: 'Server error', error: error.message });
