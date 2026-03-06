@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { Resend } = require('resend');
 const crypto = require('crypto');
 
 // --- APP CONFIGURATION ---
@@ -19,13 +18,13 @@ const BCRYPT_SALT_ROUNDS = 10;
 app.use(cors());
 app.use(express.json());
 
-// --- EMAIL CONFIGURATION (RESEND API - BYPASSES SMTP BLOCKS) ---
-let resend;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
-  console.log('✅ Resend Email API initialized');
+// --- EMAIL CONFIGURATION (BREVO API - BYPASSES SMTP BLOCKS & DOMAIN LIMITS) ---
+let brevoApiKey = null;
+if (process.env.BREVO_API_KEY) {
+  brevoApiKey = process.env.BREVO_API_KEY;
+  console.log('✅ Brevo Email API initialized');
 } else {
-  console.warn('⚠️ WARNING: RESEND_API_KEY is missing. Emails will not be sent.');
+  console.warn('⚠️ WARNING: BREVO_API_KEY is missing. Emails will not be sent.');
 }
 
 // --- DATABASE CONNECTION ---
@@ -145,38 +144,52 @@ app.post('/api/send-otp', async (req, res) => {
     await OTP.findOneAndDelete({ email }); // Clear previous
     await OTP.create({ email, otp });
 
-    if (resend) {
-      const { data, error } = await resend.emails.send({
-        from: 'AidTrack <onboarding@resend.dev>', // Resend's default testing domain
-        to: [email],
-        subject: 'AidTrack Verification Code',
-        html: `
-          <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-            <h2 style="color: #333;">Verify your email address</h2>
-            <p style="color: #555; line-height: 1.5;">Please use the following 6-digit verification code to complete your signup process for AidTrack.</p>
-            <div style="background-color: #f4f4f4; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1a56db;">${otp}</span>
-            </div>
-            <p style="color: #777; font-size: 14px;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
+    if (brevoApiKey) {
+      const emailHtml = `
+        <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2 style="color: #333;">Verify your email address</h2>
+          <p style="color: #555; line-height: 1.5;">Please use the following 6-digit verification code to complete your signup process for AidTrack.</p>
+          <div style="background-color: #f4f4f4; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1a56db;">${otp}</span>
           </div>
-        `
+          <p style="color: #777; font-size: 14px;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
+        </div>
+      `;
+
+      // The sender email must be the exact email the user verified on Brevo
+      const senderEmail = process.env.SENDER_EMAIL || 'noreply@aidtrack.com';
+
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': brevoApiKey,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: { name: "AidTrack Verification", email: senderEmail },
+          to: [{ email: email }],
+          subject: 'AidTrack Verification Code',
+          htmlContent: emailHtml
+        })
       });
 
-      if (error) {
-        console.error("Resend API Error:", error);
-        return res.status(500).json({ message: 'Failed to send email via Resend.', error: error.message });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Brevo API Error:", errorData);
+        return res.status(500).json({ message: 'Failed to send email via Brevo.', error: errorData.message || 'Unknown provider error' });
       }
 
-      console.log('Verification email sent via Resend:', data);
+      console.log('Verification email sent via Brevo HTTP API to:', email);
       res.status(200).json({ message: 'Verification code sent to your email!' });
 
     } else {
       // Fallback for local testing without API key: just print the code in the terminal
       console.log(`\n=== 🧪 LOCAL DEV MODE: Email Bypassed ===\nOTP Code for ${email} is: ${otp}\n=========================================\n`);
-      res.status(200).json({ message: 'Verification code sent! (Check the backend server console if running locally)' });
+      res.status(200).json({ message: 'Verification code generated! (Check backend logs since no API key is provided)' });
     }
   } catch (error) {
-    console.error("OTP Configure Error:", error);
+    console.error("OTP Generate Error:", error);
     res.status(500).json({ message: 'Server error processing request.', error: error.message });
   }
 });
